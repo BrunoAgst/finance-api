@@ -14,11 +14,21 @@ import java.time.LocalDateTime;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+        log.error("[IllegalArgumentException] - error: {}", ex.getMessage());
+        var error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException ex) {
-        log.error(ex.getMessage());
-
+        log.error("[DataIntegrityViolationException] - error: {}", ex.getMessage());
         if (ex.getConstraintName() != null && ex.getConstraintName().equals("users_email_key")) {
             var error = new ErrorResponse(
                     HttpStatus.BAD_REQUEST.value(),
@@ -38,7 +48,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception ex) {
-        log.error(ex.getMessage());
+        log.error("[Exception] - error: {}", ex.getMessage());
         var error = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Internal Server Error",

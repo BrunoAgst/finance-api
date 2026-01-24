@@ -19,6 +19,7 @@ public class UserController {
 
     @PostMapping(value = "/users", consumes = "application/json", produces = "application/json")
     public ResponseEntity<MessageResponseDTO> saveUser(@RequestBody UserRequestDto userRequest) {
+
         var user = UserDto.builder()
                 .name(userRequest.getName())
                 .email(userRequest.getEmail())

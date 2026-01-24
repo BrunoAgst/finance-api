@@ -23,6 +23,12 @@ public class UserServiceImpl implements UserService {
     public void createUser(UserDto user) {
         log.info("Creating user: {}", user.getEmail());
 
+        var findUser = userRepository.findByEmail(user.getEmail());
+        if (findUser.isPresent()) {
+            log.error("User creation failed. Email already in use: {}", user.getEmail());
+            throw new IllegalArgumentException("Email already in use");
+        }
+
         var passwordHash = passwordEncoder.encode(user.getPassword());
 
         var data = new User();
