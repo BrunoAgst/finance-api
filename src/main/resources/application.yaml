@@ -1,3 +1,18 @@
 spring:
   application:
     name: finance-api
+  datasource:
+    url: jdbc:postgresql://192.168.0.67:5432/financedb
+    username: brunoagst
+    password: 15121996br
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 10
+      connection-timeout: 20000
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        ddl-auto: validate
+        dialect: org.hibernate.dialect.PostgreSQLDialect

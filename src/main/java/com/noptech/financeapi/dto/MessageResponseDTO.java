@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 @Builder
-public class HeathCheckDto {
-    private String status;
+public class MessageResponseDTO {
+    private String message;
 }
