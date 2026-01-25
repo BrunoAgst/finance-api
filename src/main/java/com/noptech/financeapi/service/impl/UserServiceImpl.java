@@ -21,11 +21,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void createUser(UserDto user) {
-        log.info("Creating user: {}", user.getEmail());
+        log.info("[UserService] Creating user: {}", user.getEmail());
 
         var findUser = userRepository.findByEmail(user.getEmail());
         if (findUser.isPresent()) {
-            log.error("User creation failed. Email already in use: {}", user.getEmail());
+            log.error("[UserService] User creation failed. Email already in use: {}", user.getEmail());
             throw new IllegalArgumentException("Email already in use");
         }
 
@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
         data.setCreditCardClosingDate(user.getCreditCardClosingDate());
 
         userRepository.save(data);
-        log.info("User created successfully: {}", user.getEmail());
+        log.info("[UserService] User created successfully: {}", user.getEmail());
 
     }
 }

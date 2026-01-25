@@ -1,6 +1,6 @@
 package com.noptech.financeapi.controller;
 
-import com.noptech.financeapi.dto.MessageResponseDTO;
+import com.noptech.financeapi.dto.MessageResponseDto;
 import com.noptech.financeapi.dto.UserDto;
 import com.noptech.financeapi.dto.UserRequestDto;
 import com.noptech.financeapi.service.UserService;
@@ -18,7 +18,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping(value = "/users", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<MessageResponseDTO> saveUser(@RequestBody UserRequestDto userRequest) {
+    public ResponseEntity<MessageResponseDto> saveUser(@RequestBody UserRequestDto userRequest) {
 
         var user = UserDto.builder()
                 .name(userRequest.getName())
@@ -29,6 +29,6 @@ public class UserController {
                 .build();
 
         userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(MessageResponseDTO.builder().message("User created successfully").build());
+        return ResponseEntity.status(HttpStatus.CREATED).body(MessageResponseDto.builder().message("User created successfully").build());
     }
 }

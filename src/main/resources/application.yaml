@@ -2,9 +2,9 @@ spring:
   application:
     name: finance-api
   datasource:
-    url: jdbc:postgresql://192.168.0.67:5432/financedb
-    username: brunoagst
-    password: 15121996br
+    url: jdbc:postgresql://${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       minimum-idle: 5
@@ -16,3 +16,6 @@ spring:
       hibernate:
         ddl-auto: validate
         dialect: org.hibernate.dialect.PostgreSQLDialect
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
