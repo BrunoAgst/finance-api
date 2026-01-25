@@ -37,6 +37,31 @@ public class JwtServiceImpl implements JwtService {
                 .compact();
     }
 
+    @Override
+    public Boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            log.error("[JwtService] Token validation failed: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public String extractUserId(String token) {
+        var claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.getId();
+    }
+
     private Key getSigningKey() {
         byte[] keyBytes = secret.getBytes();
         return Keys.hmacShaKeyFor(keyBytes);
