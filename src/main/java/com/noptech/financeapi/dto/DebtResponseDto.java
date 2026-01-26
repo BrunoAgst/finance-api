@@ -6,16 +6,16 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
-public class DebtDto {
+public class DebtResponseDto {
+    private Long id;
     private String name;
     private BigDecimal amount;
     private Category category;
-    private Long userId;
     private LocalDateTime dueDate;
-    private Boolean isInstallment;
-    private Integer installmentNumber;
-    private Boolean fixed;
+    private String installmentId;
+    private List<InstallmentResponseDto> installments;
 }

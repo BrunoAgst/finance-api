@@ -13,4 +13,18 @@ public enum Category {
     OTHER(5);
 
     private final Integer categoryName;
+
+    public static Category fromCode(Integer code) {
+        if (code == null) {
+            throw new IllegalArgumentException("Category code Not Null");
+        }
+
+        for (Category c : values()) {
+            if (c.categoryName.equals(code)) {
+                return c;
+            }
+        }
+
+        throw new IllegalArgumentException("Invalid Category code: " + code);
+    }
 }
