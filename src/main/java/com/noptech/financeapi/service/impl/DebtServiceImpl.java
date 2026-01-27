@@ -2,6 +2,7 @@ package com.noptech.financeapi.service.impl;
 
 import com.noptech.financeapi.dto.DebtConsultDto;
 import com.noptech.financeapi.dto.DebtRegisterDto;
+import com.noptech.financeapi.dto.DebtsAndInstallmentsDto;
 import com.noptech.financeapi.entity.Debt;
 import com.noptech.financeapi.entity.Installment;
 import com.noptech.financeapi.exception.DataAccessException;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -78,13 +80,13 @@ public class DebtServiceImpl implements DebtService {
                         .amount(debt.get().getAmount())
                         .category(Category.fromCode(debt.get().getCategory()))
                         .date(debt.get().getDate())
-                        .installments(installments.stream().map(i -> {
-                            return DebtConsultDto.Installment.builder()
+                        .installments(installments.stream().map(i ->
+                                DebtConsultDto.Installment.builder()
                                     .installmentNumber(i.getInstallmentNumber())
                                     .installmentAmount(i.getInstallmentAmount())
                                     .installmentDueDate(i.getInstallmentDueDate())
-                                    .build();
-                        }).toList())
+                                    .build()
+                        ).toList())
                         .build();
             }
 
@@ -105,8 +107,24 @@ public class DebtServiceImpl implements DebtService {
     }
 
     @Override
-    public void getAllDebtsForUser(String userId) {
+    public List<DebtsAndInstallmentsDto> getAllDebtsForUser(String userId) {
+        var debts = debtRepository.findDebtsByUserIdLast30Days(Long.valueOf(userId));
 
+        log.info("[DebtService] Fetched {} debts for userId: {}", debts.size(), userId);
+
+        return debts.stream()
+                .filter(item ->
+                        !item.getCategory().equals(6) || item.getInstallmentNumber() != null
+                ).map(item -> DebtsAndInstallmentsDto.builder()
+                    .name(item.getDebtName())
+                    .amount(item.getDebtAmount())
+                    .category(Category.fromCode(item.getCategory()))
+                    .date(item.getDebtDate())
+                    .fixed(item.getFixed())
+                    .installmentAmount(item.getInstallmentAmount())
+                    .installmentNumber(item.getInstallmentNumber())
+                    .installmentDueDate(item.getInstallmentDueDate())
+                    .build()).toList();
     }
 
     private void createInstallmentDebts(DebtRegisterDto debtRegisterDto) {
@@ -131,7 +149,6 @@ public class DebtServiceImpl implements DebtService {
         log.info("[DebtService]  Debt created for userId: {} with Installment ID: {}", debtRegisterDto.getUserId(), installmentID);
 
         for (int i = 0; i < debtRegisterDto.getInstallmentNumber(); i++) {
-
             var installmentData = new Installment();
             installmentData.setInstallmentAmount(installmentAmount);
             installmentData.setInstallmentNumber(i + 1);

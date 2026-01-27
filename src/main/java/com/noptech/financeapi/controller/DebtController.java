@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/v1")
@@ -18,13 +19,25 @@ public class DebtController {
     private final DebtService debtService;
 
     @GetMapping(value = "/debts", produces = "application/json")
-    public ResponseEntity<?> getAllDebts(HttpServletRequest request) {
+    public ResponseEntity<List<AllDebtsResponseDto>> getAllDebts(HttpServletRequest request) {
         var userId = request.getAttribute("userId");
         log.info("[DebtController] - Fetching all debts for userId: {}", userId);
 
+        var data = debtService.getAllDebtsForUser(userId.toString());
+
         return ResponseEntity
-                .ok()
-                .body("Not implemented yet");
+                .status(200)
+                .body(data.stream().map(item -> AllDebtsResponseDto.builder()
+                                .name(item.getName())
+                                .amount(item.getAmount())
+                                .category(item.getCategory())
+                                .date(item.getDate())
+                                .fixed(item.getFixed())
+                                .installmentAmount(item.getInstallmentAmount())
+                                .installmentDueDate(item.getInstallmentDueDate())
+                                .installmentNumber(item.getInstallmentNumber())
+                                .build()
+                ).toList());
     }
 
 
