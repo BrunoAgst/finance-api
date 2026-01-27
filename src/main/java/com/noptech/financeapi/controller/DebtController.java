@@ -18,6 +18,19 @@ public class DebtController {
 
     private final DebtService debtService;
 
+    @DeleteMapping(value = "/debts/{debtId}", produces = "application/json")
+    public ResponseEntity<MessageResponseDto> deleteDebtById(HttpServletRequest request, @PathVariable String debtId) {
+        var userId = request.getAttribute("userId");
+        log.info("[DebtController] - Deleting debt for userId {} and debtId: {}", userId, debtId);
+
+        debtService.deleteDebtById(userId.toString(), Long.valueOf(debtId));
+        return ResponseEntity
+                .status(200)
+                .body(MessageResponseDto.builder()
+                        .message("Debt deleted successfully")
+                        .build());
+    }
+
     @GetMapping(value = "/debts", produces = "application/json")
     public ResponseEntity<List<AllDebtsResponseDto>> getAllDebts(HttpServletRequest request) {
         var userId = request.getAttribute("userId");

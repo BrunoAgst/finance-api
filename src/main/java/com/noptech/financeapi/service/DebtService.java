@@ -10,4 +10,5 @@ public interface DebtService {
     void createDebtForUser(DebtRegisterDto debt);
     DebtConsultDto getDebtsById(String userId, Long debtId);
     List<DebtsAndInstallmentsDto> getAllDebtsForUser(String userId);
+    void deleteDebtById(String userId, Long debtId);
 }

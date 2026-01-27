@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DebtRepository extends JpaRepository<Debt, Long> {
+
+    void deleteById(Long id);
+
     Optional<Debt> findByIdAndUserId(Long id, Long userId);
     @Query(value = """
         SELECT 
@@ -37,5 +40,5 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
             d.id, 
             i.installment_number
     """, nativeQuery = true)
-    List<DebtsAndInstallments> findDebtsByUserIdLast30Days(@Param("userId") Long userId);
+    Optional<List<DebtsAndInstallments>> findDebtsByUserIdLast30Days(@Param("userId") Long userId);
 }

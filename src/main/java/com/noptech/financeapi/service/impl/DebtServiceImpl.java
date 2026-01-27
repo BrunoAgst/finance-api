@@ -108,7 +108,11 @@ public class DebtServiceImpl implements DebtService {
 
     @Override
     public List<DebtsAndInstallmentsDto> getAllDebtsForUser(String userId) {
-        var debts = debtRepository.findDebtsByUserIdLast30Days(Long.valueOf(userId));
+        var debts = debtRepository.findDebtsByUserIdLast30Days(Long.valueOf(userId))
+                .orElseThrow(() -> {
+                    log.error("[DebtService] Error fetching debts for userId: {}", userId);
+                    return new DataAccessException("Error fetching debts");
+                });
 
         log.info("[DebtService] Fetched {} debts for userId: {}", debts.size(), userId);
 
@@ -125,6 +129,23 @@ public class DebtServiceImpl implements DebtService {
                     .installmentNumber(item.getInstallmentNumber())
                     .installmentDueDate(item.getInstallmentDueDate())
                     .build()).toList();
+    }
+
+    @Override
+    public void deleteDebtById(String userId, Long debtId) {
+        try {
+
+            var debt = debtRepository.findByIdAndUserId(debtId, Long.valueOf(userId));
+            if (debt.isEmpty()) {
+                log.error("[DebtService] Debt not found for deletion for userId: {} and debtId: {}", userId, debtId);
+                throw new NotFoundException("Debt not found for deletion");
+            }
+            debtRepository.deleteById(debtId);
+            log.info("[DebtService] Debt deleted for userId: {} and debtId: {}", userId, debtId);
+        } catch (Exception e) {
+            log.error("[DebtService] Error deleting debt for userId: {} and debtId: {}. Error: {}", userId, debtId, e.getMessage());
+            throw new DataAccessException("Error deleting debt: " + e.getMessage());
+        }
     }
 
     private void createInstallmentDebts(DebtRegisterDto debtRegisterDto) {
