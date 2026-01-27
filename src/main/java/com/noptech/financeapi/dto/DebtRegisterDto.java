@@ -14,8 +14,7 @@ public class DebtRegisterDto {
     private BigDecimal amount;
     private Category category;
     private Long userId;
-    private LocalDateTime dueDate;
-    private Boolean isInstallment;
+    private LocalDateTime date;
     private Integer installmentNumber;
     private Boolean fixed;
 }

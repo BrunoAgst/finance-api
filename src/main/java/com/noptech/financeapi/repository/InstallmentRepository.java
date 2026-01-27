@@ -7,5 +7,5 @@ import java.util.List;
 import java.util.Optional;
 
 public interface InstallmentRepository extends JpaRepository<Installment, Long> {
-    Optional<List<Installment>> findByInstallmentId(String installmentId);
+    Optional<List<Installment>> findByDebtId(Long debtId);
 }

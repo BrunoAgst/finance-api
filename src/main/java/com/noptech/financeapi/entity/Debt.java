@@ -14,10 +14,9 @@ public class Debt {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "debt_name")
     private String name;
 
-    @Column(name = "debt_amount", precision = 15, scale = 2)
+    @Column(precision = 15, scale = 2)
     private BigDecimal amount;
 
     private Integer category;
@@ -25,14 +24,7 @@ public class Debt {
     @Column(name = "user_id")
     private Long userId;
 
-    @Column(name = "due_date")
-    private LocalDateTime dueDate;
-
-    @Column(name = "is_installment")
-    private Boolean isInstallment;
-
-    @Column(name = "installment_id")
-    private String installmentId;
+    private LocalDateTime date;
 
     private Boolean fixed;
 }

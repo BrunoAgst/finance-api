@@ -15,7 +15,6 @@ public class DebtResponseDto {
     private String name;
     private BigDecimal amount;
     private Category category;
-    private LocalDateTime dueDate;
-    private String installmentId;
+    private LocalDateTime date;
     private List<InstallmentResponseDto> installments;
 }

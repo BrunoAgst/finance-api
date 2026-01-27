@@ -15,14 +15,12 @@ public class DebtConsultDto {
     private String name;
     private BigDecimal amount;
     private Category category;
-    private LocalDateTime dueDate;
-    private String installmentId;
+    private LocalDateTime date;
     private List<Installment> installments;
 
     @Data
     @Builder
     public static class Installment {
-        private String installmentId;
         private Integer installmentNumber;
         private LocalDateTime installmentDueDate;
         private BigDecimal installmentAmount;

@@ -17,6 +17,16 @@ public class DebtController {
 
     private final DebtService debtService;
 
+    @GetMapping(value = "/debts", produces = "application/json")
+    public ResponseEntity<?> getAllDebts(HttpServletRequest request) {
+        var userId = request.getAttribute("userId");
+        log.info("[DebtController] - Fetching all debts for userId: {}", userId);
+
+        return ResponseEntity
+                .ok()
+                .body("Not implemented yet");
+    }
+
 
     @GetMapping(value = "/debts/{debtId}", produces = "application/json")
     public ResponseEntity<DebtResponseDto> getDebtById(HttpServletRequest request, @PathVariable String debtId) {
@@ -31,11 +41,9 @@ public class DebtController {
                         .name(debt.getName())
                         .amount(debt.getAmount())
                         .category(debt.getCategory())
-                        .dueDate(debt.getDueDate())
-                        .installmentId(debt.getInstallmentId())
+                        .date(debt.getDate())
                         .installments(debt.getInstallments() == null ? null : debt.getInstallments().stream().map(
                                 installment -> InstallmentResponseDto.builder()
-                                        .installmentId(installment.getInstallmentId())
                                         .installmentAmount(installment.getInstallmentAmount())
                                         .installmentDueDate(installment.getInstallmentDueDate())
                                         .installmentNumber(installment.getInstallmentNumber())
@@ -54,9 +62,8 @@ public class DebtController {
                 .name(debtRequest.getName())
                 .amount(debtRequest.getAmount())
                 .category(debtRequest.getCategory())
-                .dueDate(debtRequest.getDueDate())
+                .date(debtRequest.getDate())
                 .userId(Long.valueOf(userId.toString()))
-                .isInstallment(debtRequest.getIsInstallment())
                 .installmentNumber(debtRequest.getInstallmentNumber())
                 .fixed(debtRequest.getFixed())
                 .build();

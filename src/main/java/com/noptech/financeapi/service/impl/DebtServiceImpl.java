@@ -30,7 +30,7 @@ public class DebtServiceImpl implements DebtService {
     public void createDebtForUser(DebtRegisterDto debtRegisterDto) {
 
         try {
-            if (debtRegisterDto.getIsInstallment()) {
+            if (debtRegisterDto.getCategory().name().equals("INSTALLMENT_CREDIT")) {
                 createInstallmentDebts(debtRegisterDto);
                 return;
             }
@@ -38,10 +38,9 @@ public class DebtServiceImpl implements DebtService {
             var data = new Debt();
             data.setName(debtRegisterDto.getName());
             data.setAmount(debtRegisterDto.getAmount());
-            data.setCategory(debtRegisterDto.getCategory().getCategoryName());
+            data.setCategory(debtRegisterDto.getCategory().getCategoryNumber());
             data.setUserId(debtRegisterDto.getUserId());
-            data.setDueDate(debtRegisterDto.getDueDate());
-            data.setIsInstallment(false);
+            data.setDate(debtRegisterDto.getDate());
             data.setFixed(debtRegisterDto.getFixed());
 
             debtRepository.save(data);
@@ -62,30 +61,28 @@ public class DebtServiceImpl implements DebtService {
                 throw new NotFoundException("Debt not found");
             }
 
-            if(debt.get().getIsInstallment()) {
-                var installments = installmentRepository.findByInstallmentId(debt.get().getInstallmentId())
+            if(debt.get().getCategory().equals(Category.INSTALLMENT_CREDIT.getCategoryNumber())) {
+                var installments = installmentRepository.findByDebtId(debt.get().getId())
                         .orElseThrow(() -> new DataAccessException("Error fetching installments"));
 
-                if(installments.isEmpty() || installments.getFirst().getInstallmentId() == null) {
-                    log.error("[DebtService] Installments not found for installmentId: {}", debt.get().getInstallmentId());
+                if(installments.isEmpty() || installments.getFirst().getId() == null) {
+                    log.error("[DebtService] Installments not found for installmentId: {}", debt.get().getId());
                     throw new NotFoundException("Installments not found");
                 }
 
-                log.info("[DebtService] Debt fetched for userId: {}, debtId: {} and installmentId: {}", userId, debtId, installments.getFirst().getInstallmentId());
+                log.info("[DebtService] Debt fetched for userId: {}, debtId: {} and installmentId: {}", userId, debtId, installments.getFirst().getId());
 
                 return DebtConsultDto.builder()
                         .id(debt.get().getId())
                         .name(debt.get().getName())
                         .amount(debt.get().getAmount())
                         .category(Category.fromCode(debt.get().getCategory()))
-                        .dueDate(debt.get().getDueDate())
-                        .installmentId(debt.get().getInstallmentId())
+                        .date(debt.get().getDate())
                         .installments(installments.stream().map(i -> {
                             return DebtConsultDto.Installment.builder()
                                     .installmentNumber(i.getInstallmentNumber())
                                     .installmentAmount(i.getInstallmentAmount())
                                     .installmentDueDate(i.getInstallmentDueDate())
-                                    .installmentId(i.getInstallmentId())
                                     .build();
                         }).toList())
                         .build();
@@ -98,13 +95,18 @@ public class DebtServiceImpl implements DebtService {
                     .name(debt.get().getName())
                     .amount(debt.get().getAmount())
                     .category(Category.fromCode(debt.get().getCategory()))
-                    .dueDate(debt.get().getDueDate())
+                    .date(debt.get().getDate())
                     .build();
 
         } catch (Exception e) {
             log.error("[DebtService] Error fetching debt for userId: {} and debtId: {}. Error: {}", userId, debtId, e.getMessage());
             throw new DataAccessException("Error fetching debt: " + e.getMessage());
         }
+    }
+
+    @Override
+    public void getAllDebtsForUser(String userId) {
+
     }
 
     private void createInstallmentDebts(DebtRegisterDto debtRegisterDto) {
@@ -121,11 +123,9 @@ public class DebtServiceImpl implements DebtService {
         var data = new Debt();
         data.setName(debtRegisterDto.getName());
         data.setAmount(debtRegisterDto.getAmount());
-        data.setCategory(debtRegisterDto.getCategory().getCategoryName());
+        data.setCategory(debtRegisterDto.getCategory().getCategoryNumber());
         data.setUserId(debtRegisterDto.getUserId());
-        data.setDueDate(debtRegisterDto.getDueDate());
-        data.setIsInstallment(true);
-        data.setInstallmentId(installmentID);
+        data.setDate(debtRegisterDto.getDate());
         data.setFixed(false);
         debtRepository.save(data);
         log.info("[DebtService]  Debt created for userId: {} with Installment ID: {}", debtRegisterDto.getUserId(), installmentID);
@@ -135,8 +135,9 @@ public class DebtServiceImpl implements DebtService {
             var installmentData = new Installment();
             installmentData.setInstallmentAmount(installmentAmount);
             installmentData.setInstallmentNumber(i + 1);
-            installmentData.setInstallmentDueDate(debtRegisterDto.getDueDate().plusMonths(i + 1));
-            installmentData.setInstallmentId(installmentID);
+            installmentData.setInstallmentDueDate(debtRegisterDto.getDate().plusMonths(i + 1));
+            installmentData.setDebtId(data.getUserId());
+            installmentData.setDebtId(data.getId());
             installmentRepository.save(installmentData);
             log.info("[DebtService] Installment debt created for userId: {} - Installment {}", debtRegisterDto.getUserId(), (i + 1));
         }

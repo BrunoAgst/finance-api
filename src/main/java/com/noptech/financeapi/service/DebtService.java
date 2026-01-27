@@ -6,4 +6,5 @@ import com.noptech.financeapi.dto.DebtRegisterDto;
 public interface DebtService {
     void createDebtForUser(DebtRegisterDto debt);
     DebtConsultDto getDebtsById(String userId, Long debtId);
+    void getAllDebtsForUser(String userId);
 }

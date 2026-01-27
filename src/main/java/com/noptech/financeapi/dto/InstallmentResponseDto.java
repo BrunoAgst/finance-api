@@ -12,5 +12,4 @@ public class InstallmentResponseDto {
     private BigDecimal installmentAmount;
     private Integer installmentNumber;
     private LocalDateTime installmentDueDate;
-    private String installmentId;
 }
