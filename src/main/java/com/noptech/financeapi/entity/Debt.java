@@ -17,7 +17,7 @@ public class Debt {
     @Column(name = "debt_name")
     private String name;
 
-    @Column(name = "debt_amount")
+    @Column(name = "debt_amount", precision = 15, scale = 2)
     private BigDecimal amount;
 
     private Integer category;
