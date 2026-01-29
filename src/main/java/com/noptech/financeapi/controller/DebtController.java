@@ -9,7 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
+import java.util.stream.IntStream;
+
 @Slf4j
 @RestController
 @RequestMapping("/v1")
@@ -17,6 +21,57 @@ import java.util.List;
 public class DebtController {
 
     private final DebtService debtService;
+
+
+    @PatchMapping(value = "/debts/{debtId}", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<DebtUpdateResponseDto> updateDebtById(HttpServletRequest request, @PathVariable String debtId,
+                                                                @Valid @RequestBody DebtUpdateRequestDto debtUpdateRequest) {
+        var userId = request.getAttribute("userId");
+        log.info("[DebtController] - Updating debt for userId {} and debtId: {} with details: {}", userId, debtId, debtUpdateRequest);
+
+        var installments = debtUpdateRequest.getInstallmentNumber() == null || debtUpdateRequest.getInstallmentNumber() == 0 ? null :
+                IntStream.range(1, debtUpdateRequest.getInstallmentNumber() + 1)
+                        .mapToObj(i -> DebtUpdateDto.Installment.builder()
+                                .installmentNumber(i)
+                                .installmentDueDate(debtUpdateRequest.getDate().plusMonths(i + 1))
+                                .installmentAmount(
+                                        debtUpdateRequest.getAmount().divide(
+                                                BigDecimal.valueOf(debtUpdateRequest.getInstallmentNumber()),
+                                                2,
+                                                RoundingMode.HALF_UP
+                                        )
+                                )
+                                .build())
+                        .toList();
+
+
+        var dataUpdate = DebtUpdateDto.builder()
+                .name(debtUpdateRequest.getName())
+                .amount(debtUpdateRequest.getAmount())
+                .date(debtUpdateRequest.getDate())
+                .fixed(debtUpdateRequest.getFixed())
+                .installments(installments).build();
+
+        var data = debtService.updateDebtById(userId.toString(), Long.valueOf(debtId), dataUpdate);
+
+        return ResponseEntity
+                .status(200)
+                .body(DebtUpdateResponseDto.builder()
+                        .name(data.getName())
+                        .amount(data.getAmount())
+                        .category(data.getCategory())
+                        .date(data.getDate())
+                        .fixed(data.getFixed())
+                        .installments(data.getInstallments() == null ? null :
+                                data.getInstallments().stream().map(debt ->
+                                DebtUpdateResponseDto.Installment.builder()
+                                        .installmentNumber(debt.getInstallmentNumber())
+                                        .installmentDueDate(debt.getInstallmentDueDate())
+                                        .installmentAmount(debt.getInstallmentAmount())
+                                        .build()
+                        ).toList())
+                        .build());
+    }
 
     @DeleteMapping(value = "/debts/{debtId}", produces = "application/json")
     public ResponseEntity<MessageResponseDto> deleteDebtById(HttpServletRequest request, @PathVariable String debtId) {

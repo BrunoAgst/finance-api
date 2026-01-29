@@ -10,12 +10,12 @@ import java.util.List;
 
 @Data
 @Builder
-public class DebtConsultDto {
-    private Long id;
+public class DebtUpdateResponseDto {
     private String name;
     private BigDecimal amount;
     private Category category;
     private LocalDateTime date;
+    private Boolean fixed;
     private List<Installment> installments;
 
     @Data

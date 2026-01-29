@@ -2,18 +2,41 @@ package com.noptech.financeapi.repository;
 
 import com.noptech.financeapi.dto.DebtsAndInstallments;
 import com.noptech.financeapi.entity.Debt;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface DebtRepository extends JpaRepository<Debt, Long> {
 
+    @Modifying
+    @Transactional
+    @Query(value = """
+        UPDATE debts SET 
+                name = :name, 
+                amount = :amount, 
+                date = :date, 
+                fixed = :fixed 
+        WHERE id = :id
+        """, nativeQuery = true
+    )
+    Integer updateDebtById(
+            @Param("id") Long id,
+            @Param("name") String name,
+            @Param("amount") BigDecimal amount,
+            @Param("date") LocalDateTime date,
+            @Param("fixed") Boolean fixed
+    );
+
     void deleteById(Long id);
 
-    Optional<Debt> findByIdAndUserId(Long id, Long userId);
+    Debt findByIdAndUserId(Long id, Long userId);
+
     @Query(value = """
         SELECT 
             d.id as debt_id,
@@ -40,5 +63,5 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
             d.id, 
             i.installment_number
     """, nativeQuery = true)
-    Optional<List<DebtsAndInstallments>> findDebtsByUserIdLast30Days(@Param("userId") Long userId);
+    List<DebtsAndInstallments> findDebtsByUserIdLast30Days(@Param("userId") Long userId);
 }

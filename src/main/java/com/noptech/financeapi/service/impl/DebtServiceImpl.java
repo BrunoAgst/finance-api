@@ -1,8 +1,6 @@
 package com.noptech.financeapi.service.impl;
 
-import com.noptech.financeapi.dto.DebtConsultDto;
-import com.noptech.financeapi.dto.DebtRegisterDto;
-import com.noptech.financeapi.dto.DebtsAndInstallmentsDto;
+import com.noptech.financeapi.dto.*;
 import com.noptech.financeapi.entity.Debt;
 import com.noptech.financeapi.entity.Installment;
 import com.noptech.financeapi.exception.DataAccessException;
@@ -17,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,33 +54,33 @@ public class DebtServiceImpl implements DebtService {
     }
 
     @Override
-    public DebtConsultDto getDebtsById(String userId, Long debtId) {
+    public DebtDto getDebtsById(String userId, Long debtId) {
         try {
             var debt = debtRepository.findByIdAndUserId(debtId, Long.valueOf(userId));
-            if (debt.isEmpty()) {
+            if (debt == null) {
                 log.error("[DebtService] Debt not found for userId: {} and debtId: {}", userId, debtId);
                 throw new NotFoundException("Debt not found");
             }
 
-            if(debt.get().getCategory().equals(Category.INSTALLMENT_CREDIT.getCategoryNumber())) {
-                var installments = installmentRepository.findByDebtId(debt.get().getId())
-                        .orElseThrow(() -> new DataAccessException("Error fetching installments"));
+            if(debt.getCategory().equals(Category.INSTALLMENT_CREDIT.getCategoryNumber())) {
+                var installments = installmentRepository.findByDebtId(debt.getId());
 
                 if(installments.isEmpty() || installments.getFirst().getId() == null) {
-                    log.error("[DebtService] Installments not found for installmentId: {}", debt.get().getId());
+                    log.error("[DebtService] Installments not found for installmentId: {}", debt.getId());
                     throw new NotFoundException("Installments not found");
                 }
 
                 log.info("[DebtService] Debt fetched for userId: {}, debtId: {} and installmentId: {}", userId, debtId, installments.getFirst().getId());
 
-                return DebtConsultDto.builder()
-                        .id(debt.get().getId())
-                        .name(debt.get().getName())
-                        .amount(debt.get().getAmount())
-                        .category(Category.fromCode(debt.get().getCategory()))
-                        .date(debt.get().getDate())
+                return DebtDto.builder()
+                        .id(debt.getId())
+                        .name(debt.getName())
+                        .amount(debt.getAmount())
+                        .category(Category.fromCode(debt.getCategory()))
+                        .date(debt.getDate())
+                        .fixed(debt.getFixed())
                         .installments(installments.stream().map(i ->
-                                DebtConsultDto.Installment.builder()
+                                DebtDto.Installment.builder()
                                     .installmentNumber(i.getInstallmentNumber())
                                     .installmentAmount(i.getInstallmentAmount())
                                     .installmentDueDate(i.getInstallmentDueDate())
@@ -92,12 +91,13 @@ public class DebtServiceImpl implements DebtService {
 
             log.info("[DebtService] Debt fetched for userId: {} and debtId: {}", userId, debtId);
 
-            return DebtConsultDto.builder()
-                    .id(debt.get().getId())
-                    .name(debt.get().getName())
-                    .amount(debt.get().getAmount())
-                    .category(Category.fromCode(debt.get().getCategory()))
-                    .date(debt.get().getDate())
+            return DebtDto.builder()
+                    .id(debt.getId())
+                    .name(debt.getName())
+                    .amount(debt.getAmount())
+                    .category(Category.fromCode(debt.getCategory()))
+                    .date(debt.getDate())
+                    .fixed(debt.getFixed())
                     .build();
 
         } catch (Exception e) {
@@ -108,35 +108,37 @@ public class DebtServiceImpl implements DebtService {
 
     @Override
     public List<DebtsAndInstallmentsDto> getAllDebtsForUser(String userId) {
-        var debts = debtRepository.findDebtsByUserIdLast30Days(Long.valueOf(userId))
-                .orElseThrow(() -> {
-                    log.error("[DebtService] Error fetching debts for userId: {}", userId);
-                    return new DataAccessException("Error fetching debts");
-                });
+        try {
+            var debts = debtRepository.findDebtsByUserIdLast30Days(Long.valueOf(userId));
 
-        log.info("[DebtService] Fetched {} debts for userId: {}", debts.size(), userId);
+            log.info("[DebtService] Fetched {} debts for userId: {}", debts.size(), userId);
 
-        return debts.stream()
-                .filter(item ->
-                        !item.getCategory().equals(6) || item.getInstallmentNumber() != null
-                ).map(item -> DebtsAndInstallmentsDto.builder()
-                    .name(item.getDebtName())
-                    .amount(item.getDebtAmount())
-                    .category(Category.fromCode(item.getCategory()))
-                    .date(item.getDebtDate())
-                    .fixed(item.getFixed())
-                    .installmentAmount(item.getInstallmentAmount())
-                    .installmentNumber(item.getInstallmentNumber())
-                    .installmentDueDate(item.getInstallmentDueDate())
-                    .build()).toList();
+            return debts.stream()
+                    .filter(item ->
+                            !item.getCategory().equals(6) || item.getInstallmentNumber() != null
+                    ).map(item -> DebtsAndInstallmentsDto.builder()
+                            .name(item.getDebtName())
+                            .amount(item.getDebtAmount())
+                            .category(Category.fromCode(item.getCategory()))
+                            .date(item.getDebtDate())
+                            .fixed(item.getFixed())
+                            .installmentAmount(item.getInstallmentAmount())
+                            .installmentNumber(item.getInstallmentNumber())
+                            .installmentDueDate(item.getInstallmentDueDate())
+                            .build()).toList();
+
+        } catch (Exception e) {
+            log.error("[DebtService] Error fetching all debts for userId: {}. Error: {}", userId, e.getMessage());
+            throw new DataAccessException("Error fetching all debts: " + e.getMessage());
+        }
+
     }
 
     @Override
     public void deleteDebtById(String userId, Long debtId) {
         try {
-
             var debt = debtRepository.findByIdAndUserId(debtId, Long.valueOf(userId));
-            if (debt.isEmpty()) {
+            if (debt == null) {
                 log.error("[DebtService] Debt not found for deletion for userId: {} and debtId: {}", userId, debtId);
                 throw new NotFoundException("Debt not found for deletion");
             }
@@ -148,8 +150,83 @@ public class DebtServiceImpl implements DebtService {
         }
     }
 
-    private void createInstallmentDebts(DebtRegisterDto debtRegisterDto) {
+    @Override
+    public DebtDto updateDebtById(String userId, Long debtId, DebtUpdateDto debtRegisterDto) {
+        try {
 
+            var debt = debtRepository.findByIdAndUserId(debtId, Long.valueOf(userId));
+            if (debt == null) {
+                log.error("[DebtService] Debt not found for update for userId: {} and debtId: {}", userId, debtId);
+                throw new NotFoundException("Debt not found for update");
+            }
+
+            debtRepository.updateDebtById(
+                    debtId,
+                    debtRegisterDto.getName(),
+                    debtRegisterDto.getAmount(),
+                    debtRegisterDto.getDate(),
+                    debtRegisterDto.getFixed()
+            );
+
+            log.info("[DebtService] Debt updated for userId: {} and debtId: {}", userId, debtId);
+
+            if (debt.getCategory().equals(6)) {
+
+                installmentRepository.deleteAllByDebtId(debtId);
+                log.info("[DebtService] Existing installments deleted for userId: {} and debtId: {}", userId, debtId);
+                List<DebtUpdateDto.Installment> updatedInstallments = new ArrayList<>();
+
+                for (int i = 0; i < debtRegisterDto.getInstallments().size(); i++) {
+                    var installmentData = new Installment();
+                    installmentData.setInstallmentAmount(debtRegisterDto.getInstallments().getFirst().getInstallmentAmount());
+                    installmentData.setInstallmentNumber(i + 1);
+                    installmentData.setInstallmentDueDate(debtRegisterDto.getInstallments().getFirst().getInstallmentDueDate().plusMonths(i));
+                    installmentData.setDebtId(debtId);
+                    installmentRepository.save(installmentData);
+
+                    updatedInstallments.add(DebtUpdateDto.Installment.builder()
+                            .installmentNumber(installmentData.getInstallmentNumber())
+                            .installmentDueDate(installmentData.getInstallmentDueDate())
+                            .installmentAmount(installmentData.getInstallmentAmount())
+                            .build());
+
+                    log.info("[DebtService] Installment updated for userId: {} - Installment {}", userId, installmentData.getInstallmentNumber());
+                }
+
+                return DebtDto.builder()
+                        .id(debtId)
+                        .name(debtRegisterDto.getName())
+                        .amount(debtRegisterDto.getAmount())
+                        .category(Category.fromCode(debt.getCategory()))
+                        .date(debtRegisterDto.getDate())
+                        .fixed(debtRegisterDto.getFixed())
+                        .installments(updatedInstallments.stream().map(installmentDto ->
+                                        DebtDto.Installment.builder()
+                                                .installmentNumber(installmentDto.getInstallmentNumber())
+                                                .installmentDueDate(installmentDto.getInstallmentDueDate())
+                                                .installmentAmount(installmentDto.getInstallmentAmount())
+                                                .build()
+                                ).toList())
+                        .build();
+            }
+
+            return DebtDto.builder()
+                    .id(debtId)
+                    .name(debtRegisterDto.getName())
+                    .amount(debtRegisterDto.getAmount())
+                    .category(Category.fromCode(debt.getCategory()))
+                    .date(debtRegisterDto.getDate())
+                    .fixed(debtRegisterDto.getFixed())
+                    .installments(null)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("[DebtService] Error updating debt for userId: {} and debtId: {}. Error: {}", userId, debtId, e.getMessage());
+            throw new DataAccessException("Error updating debt: " + e.getMessage());
+        }
+    }
+
+    private void createInstallmentDebts(DebtRegisterDto debtRegisterDto) {
         var installmentAmount = debtRegisterDto.getAmount()
                 .divide(
                         BigDecimal.valueOf(debtRegisterDto.getInstallmentNumber()),
@@ -174,7 +251,6 @@ public class DebtServiceImpl implements DebtService {
             installmentData.setInstallmentAmount(installmentAmount);
             installmentData.setInstallmentNumber(i + 1);
             installmentData.setInstallmentDueDate(debtRegisterDto.getDate().plusMonths(i + 1));
-            installmentData.setDebtId(data.getUserId());
             installmentData.setDebtId(data.getId());
             installmentRepository.save(installmentData);
             log.info("[DebtService] Installment debt created for userId: {} - Installment {}", debtRegisterDto.getUserId(), (i + 1));
