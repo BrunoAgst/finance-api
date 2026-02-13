@@ -15,10 +15,10 @@ services:
       - finance-network
     entrypoint: [
       "infisical", "run",
-      "--domain=http://192.168.0.61",
-      "--projectId=594af03c-d95c-4ab8-889e-776d0ae05650",
-      "--env=dev",
-      "--token=st.4e610297-57b3-4fe9-b7ae-180778181555.b261ffab04a3017a75cd4e2c1de9a8da.739dea01022bd57a1beabc5844ef18b5",
+      "--domain=${INFISICAL_DOMAIN}",
+      "--projectId=${INFISICAL_PROJECT_ID}",
+      "--env=${INFISICAL_ENVIRONMENT}",
+      "--token=${INFISICAL_TOKEN}",
       "--",
       "java", "-jar", "app.jar"
     ]
