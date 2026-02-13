@@ -13,7 +13,7 @@ public class HealthCheckController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(HeathCheckDto.builder().
-                        status("OK")
+                        status("UP")
                         .build());
     }
 }
