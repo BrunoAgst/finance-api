@@ -28,6 +28,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
+    @ExceptionHandler(KeyCloakException.class)
+    public ResponseEntity<ErrorResponse> handleKeyCloakException(DataAccessException ex) {
+        log.error("[KeyCloakException] - error: {}", ex.getMessage());
+        var error = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex) {
         log.error("[MethodArgumentNotValidException] - error: {}", ex.getMessage());

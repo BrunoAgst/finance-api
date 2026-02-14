@@ -8,9 +8,10 @@ import java.math.BigDecimal;
 @Data
 @Builder
 public class UserDto {
-    private String name;
+    private String firstname;
+    private String lastname;
     private String email;
+    private String username;
     private BigDecimal salary;
-    private String keycloakId;
     private Integer creditCardClosingDate;
 }

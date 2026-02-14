@@ -23,10 +23,11 @@ public class UserController {
     public ResponseEntity<MessageResponseDto> saveUser(@RequestBody UserRequestDto userRequest) {
 
         var user = UserDto.builder()
-                .name(userRequest.getName())
+                .firstname(userRequest.getFirstname())
+                .lastname(userRequest.getLastname())
                 .email(userRequest.getEmail())
+                .username(userRequest.getUsername())
                 .salary(userRequest.getSalary())
-                .keycloakId("")
                 .creditCardClosingDate(userRequest.getCreditCardClosingDate())
                 .build();
 
