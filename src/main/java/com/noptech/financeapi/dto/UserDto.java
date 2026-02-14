@@ -11,5 +11,6 @@ public class UserDto {
     private String name;
     private String email;
     private BigDecimal salary;
+    private String keycloakId;
     private Integer creditCardClosingDate;
 }

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -15,5 +16,6 @@ public class User {
     private String name;
     private String email;
     private BigDecimal salary;
+    private UUID keycloakId;
     private Integer creditCardClosingDate;
 }

@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -34,6 +36,7 @@ public class UserServiceImpl implements UserService {
             data.setName(user.getName());
             data.setEmail(user.getEmail());
             data.setSalary(user.getSalary());
+            data.setKeycloakId(UUID.randomUUID());
             data.setCreditCardClosingDate(user.getCreditCardClosingDate());
 
             userRepository.save(data);

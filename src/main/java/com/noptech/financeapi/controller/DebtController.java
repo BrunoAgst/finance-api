@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 @Slf4j
@@ -33,10 +34,11 @@ public class DebtController {
     public ResponseEntity<DebtUpdateResponseDto> updateDebtById(@AuthenticationPrincipal Jwt jwt,
                                                                 @PathVariable String debtId,
                                                                 @Valid @RequestBody DebtUpdateRequestDto debtUpdateRequest) {
-        var userEmail = jwt.getClaim("email");
+        var keycloakId = jwt.getClaim("sub");
 
-        var user = userRepository.findByEmail(userEmail.toString())
-                .orElseThrow(() -> new NotFoundException("User not found with email: " + userEmail));
+        var user = userRepository.findByKeycloakId(UUID.fromString(keycloakId.toString()))
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + jwt.getClaim("email")));
+
 
         var userId = user.getId();
 
@@ -89,10 +91,10 @@ public class DebtController {
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @DeleteMapping(value = "/debts/{debtId}", produces = "application/json")
     public ResponseEntity<MessageResponseDto> deleteDebtById(@AuthenticationPrincipal Jwt jwt, @PathVariable String debtId) {
-        var userEmail = jwt.getClaim("email");
+        var keycloakId = jwt.getClaim("sub");
 
-        var user = userRepository.findByEmail(userEmail.toString())
-                .orElseThrow(() -> new NotFoundException("User not found with email: " + userEmail));
+        var user = userRepository.findByKeycloakId(UUID.fromString(keycloakId.toString()))
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + jwt.getClaim("email")));
 
         var userId = user.getId();
 
@@ -110,10 +112,10 @@ public class DebtController {
     @GetMapping(value = "/debts", produces = "application/json")
     public ResponseEntity<List<AllDebtsResponseDto>> getAllDebts(@AuthenticationPrincipal Jwt jwt) {
 
-        var userEmail = jwt.getClaim("email");
+        var keycloakId = jwt.getClaim("sub");
 
-        var user = userRepository.findByEmail(userEmail.toString())
-                .orElseThrow(() -> new NotFoundException("User not found with email: " + userEmail));
+        var user = userRepository.findByKeycloakId(UUID.fromString(keycloakId.toString()))
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + jwt.getClaim("email")));
 
         var userId = user.getId();
 
@@ -140,10 +142,10 @@ public class DebtController {
     @GetMapping(value = "/debts/{debtId}", produces = "application/json")
     public ResponseEntity<DebtResponseDto> getDebtById(@PathVariable String debtId, @AuthenticationPrincipal Jwt jwt) {
 
-        var userEmail = jwt.getClaim("email");
+        var keycloakId = jwt.getClaim("sub");
 
-        var user = userRepository.findByEmail(userEmail.toString())
-                .orElseThrow(() -> new NotFoundException("User not found with email: " + userEmail));
+        var user = userRepository.findByKeycloakId(UUID.fromString(keycloakId.toString()))
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + jwt.getClaim("email")));
 
         var userId = user.getId();
 
@@ -172,10 +174,10 @@ public class DebtController {
     @PostMapping(value = "/debts", consumes = "application/json", produces = "application/json")
     public ResponseEntity<MessageResponseDto> addDebt(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody DebtRequestDto debtRequest) {
 
-        var userEmail = jwt.getClaim("email");
+        var keycloakId = jwt.getClaim("sub");
 
-        var user = userRepository.findByEmail(userEmail.toString())
-                .orElseThrow(() -> new NotFoundException("User not found with email: " + userEmail));
+        var user = userRepository.findByKeycloakId(UUID.fromString(keycloakId.toString()))
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + jwt.getClaim("email")));
 
         var userId = user.getId();
 
