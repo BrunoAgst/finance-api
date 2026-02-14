@@ -8,7 +8,6 @@ import com.noptech.financeapi.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -32,12 +30,9 @@ public class UserServiceImpl implements UserService {
                 throw new IllegalArgumentException("Email already in use");
             }
 
-            var passwordHash = passwordEncoder.encode(user.getPassword());
-
             var data = new User();
             data.setName(user.getName());
             data.setEmail(user.getEmail());
-            data.setPassword(passwordHash);
             data.setSalary(user.getSalary());
             data.setCreditCardClosingDate(user.getCreditCardClosingDate());
 

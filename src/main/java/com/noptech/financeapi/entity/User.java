@@ -14,7 +14,6 @@ public class User {
     private Long id;
     private String name;
     private String email;
-    private String password;
     private BigDecimal salary;
     private Integer creditCardClosingDate;
 }

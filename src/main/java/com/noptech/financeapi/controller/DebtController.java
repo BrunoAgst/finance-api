@@ -1,12 +1,16 @@
 package com.noptech.financeapi.controller;
 
 import com.noptech.financeapi.dto.*;
+import com.noptech.financeapi.exception.NotFoundException;
+import com.noptech.financeapi.repository.UserRepository;
 import com.noptech.financeapi.service.DebtService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -20,13 +24,22 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class DebtController {
 
+    private final UserRepository userRepository;
+
     private final DebtService debtService;
 
-
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PatchMapping(value = "/debts/{debtId}", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<DebtUpdateResponseDto> updateDebtById(HttpServletRequest request, @PathVariable String debtId,
+    public ResponseEntity<DebtUpdateResponseDto> updateDebtById(@AuthenticationPrincipal Jwt jwt,
+                                                                @PathVariable String debtId,
                                                                 @Valid @RequestBody DebtUpdateRequestDto debtUpdateRequest) {
-        var userId = request.getAttribute("userId");
+        var userEmail = jwt.getClaim("email");
+
+        var user = userRepository.findByEmail(userEmail.toString())
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + userEmail));
+
+        var userId = user.getId();
+
         log.info("[DebtController] - Updating debt for userId {} and debtId: {} with details: {}", userId, debtId, debtUpdateRequest);
 
         var installments = debtUpdateRequest.getInstallmentNumber() == null || debtUpdateRequest.getInstallmentNumber() == 0 ? null :
@@ -73,9 +86,16 @@ public class DebtController {
                         .build());
     }
 
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @DeleteMapping(value = "/debts/{debtId}", produces = "application/json")
-    public ResponseEntity<MessageResponseDto> deleteDebtById(HttpServletRequest request, @PathVariable String debtId) {
-        var userId = request.getAttribute("userId");
+    public ResponseEntity<MessageResponseDto> deleteDebtById(@AuthenticationPrincipal Jwt jwt, @PathVariable String debtId) {
+        var userEmail = jwt.getClaim("email");
+
+        var user = userRepository.findByEmail(userEmail.toString())
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + userEmail));
+
+        var userId = user.getId();
+
         log.info("[DebtController] - Deleting debt for userId {} and debtId: {}", userId, debtId);
 
         debtService.deleteDebtById(userId.toString(), Long.valueOf(debtId));
@@ -86,9 +106,17 @@ public class DebtController {
                         .build());
     }
 
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping(value = "/debts", produces = "application/json")
-    public ResponseEntity<List<AllDebtsResponseDto>> getAllDebts(HttpServletRequest request) {
-        var userId = request.getAttribute("userId");
+    public ResponseEntity<List<AllDebtsResponseDto>> getAllDebts(@AuthenticationPrincipal Jwt jwt) {
+
+        var userEmail = jwt.getClaim("email");
+
+        var user = userRepository.findByEmail(userEmail.toString())
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + userEmail));
+
+        var userId = user.getId();
+
         log.info("[DebtController] - Fetching all debts for userId: {}", userId);
 
         var data = debtService.getAllDebtsForUser(userId.toString());
@@ -108,10 +136,17 @@ public class DebtController {
                 ).toList());
     }
 
-
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @GetMapping(value = "/debts/{debtId}", produces = "application/json")
-    public ResponseEntity<DebtResponseDto> getDebtById(HttpServletRequest request, @PathVariable String debtId) {
-        var userId = request.getAttribute("userId");
+    public ResponseEntity<DebtResponseDto> getDebtById(@PathVariable String debtId, @AuthenticationPrincipal Jwt jwt) {
+
+        var userEmail = jwt.getClaim("email");
+
+        var user = userRepository.findByEmail(userEmail.toString())
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + userEmail));
+
+        var userId = user.getId();
+
         log.info("[DebtController] - Fetching debts for userId {} and debtId: {}", userId, debtId);
 
         var debt = debtService.getDebtsById(userId.toString(), Long.valueOf(debtId));
@@ -133,10 +168,17 @@ public class DebtController {
                         .build());
     }
 
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PostMapping(value = "/debts", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<MessageResponseDto> addDebt(HttpServletRequest request, @Valid @RequestBody DebtRequestDto debtRequest) {
+    public ResponseEntity<MessageResponseDto> addDebt(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody DebtRequestDto debtRequest) {
 
-        var userId = request.getAttribute("userId");
+        var userEmail = jwt.getClaim("email");
+
+        var user = userRepository.findByEmail(userEmail.toString())
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + userEmail));
+
+        var userId = user.getId();
+
         log.info("[DebtController] - Adding debt for userId: {} with details: {}", userId, debtRequest);
 
         var debt = DebtRegisterDto.builder()
