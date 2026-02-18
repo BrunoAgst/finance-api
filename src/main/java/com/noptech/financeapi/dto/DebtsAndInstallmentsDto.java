@@ -10,6 +10,7 @@ import java.time.LocalDate;
 @Data
 @Builder
 public class DebtsAndInstallmentsDto {
+    private Long id;
     private String name;
     private BigDecimal amount;
     private Category category;

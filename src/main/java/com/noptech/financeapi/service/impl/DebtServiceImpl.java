@@ -114,9 +114,8 @@ public class DebtServiceImpl implements DebtService {
             log.info("[DebtService] Fetched {} debts for userId: {}", debts.size(), userId);
 
             return debts.stream()
-                    .filter(item ->
-                            !item.getCategory().equals(6) || item.getInstallmentNumber() != null
-                    ).map(item -> DebtsAndInstallmentsDto.builder()
+                    .map(item -> DebtsAndInstallmentsDto.builder()
+                            .id(item.getId())
                             .name(item.getDebtName())
                             .amount(item.getDebtAmount())
                             .category(Category.fromCode(item.getCategory()))
