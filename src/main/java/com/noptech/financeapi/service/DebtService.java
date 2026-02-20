@@ -11,6 +11,7 @@ public interface DebtService {
     void createDebtForUser(DebtRegisterDto debt);
     DebtDto getDebtsById(String userId, Long debtId);
     List<DebtsAndInstallmentsDto> getAllDebtsForUser(String userId);
+    List<DebtsAndInstallmentsDto> getDebtsByMonth(String userId, Integer year, Integer month);
     void deleteDebtById(String userId, Long debtId);
     DebtDto updateDebtById(String userId, Long debtId, DebtUpdateDto debtRegisterDto);
 }

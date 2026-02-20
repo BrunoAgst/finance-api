@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 
@@ -107,9 +108,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException ex) {
+        log.error("[NoResourceFoundException] - error: {} - path: {}", ex.getMessage(), ex.getResourcePath());
+        var error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Resource not found: " + ex.getResourcePath(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception ex) {
-        log.error("[Exception] - error: {}", ex.getMessage());
+        log.error("[Exception] - error: {}", ex.getMessage(), ex);
         var error = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Internal Server Error",

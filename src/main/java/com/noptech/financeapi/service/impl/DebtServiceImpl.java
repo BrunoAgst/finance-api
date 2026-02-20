@@ -134,6 +134,32 @@ public class DebtServiceImpl implements DebtService {
     }
 
     @Override
+    public List<DebtsAndInstallmentsDto> getDebtsByMonth(String userId, Integer year, Integer month) {
+        try {
+            var debts = debtRepository.findDebtsByUserIdAndMonth(Long.valueOf(userId), year, month);
+
+            log.info("[DebtService] Fetched {} debts for userId: {} for month: {}/{}", debts.size(), userId, month, year);
+
+            return debts.stream()
+                    .map(item -> DebtsAndInstallmentsDto.builder()
+                            .id(item.getId())
+                            .name(item.getDebtName())
+                            .amount(item.getDebtAmount())
+                            .category(Category.fromCode(item.getCategory()))
+                            .date(item.getDebtDate())
+                            .fixed(item.getFixed())
+                            .installmentAmount(item.getInstallmentAmount())
+                            .installmentNumber(item.getInstallmentNumber())
+                            .installmentDueDate(item.getInstallmentDueDate())
+                            .build()).toList();
+
+        } catch (Exception e) {
+            log.error("[DebtService] Error fetching debts by month for userId: {}, year: {}, month: {}. Error: {}", userId, year, month, e.getMessage());
+            throw new DataAccessException("Error fetching debts by month: " + e.getMessage());
+        }
+    }
+
+    @Override
     public void deleteDebtById(String userId, Long debtId) {
         try {
             var debt = debtRepository.findByIdAndUserId(debtId, Long.valueOf(userId));
@@ -175,11 +201,13 @@ public class DebtServiceImpl implements DebtService {
                 log.info("[DebtService] Existing installments deleted for userId: {} and debtId: {}", userId, debtId);
                 List<DebtUpdateDto.Installment> updatedInstallments = new ArrayList<>();
 
+                var debtDate = debtRegisterDto.getDate();
+
                 for (int i = 0; i < debtRegisterDto.getInstallments().size(); i++) {
                     var installmentData = new Installment();
-                    installmentData.setInstallmentAmount(debtRegisterDto.getInstallments().getFirst().getInstallmentAmount());
+                    installmentData.setInstallmentAmount(debtRegisterDto.getInstallments().get(i).getInstallmentAmount());
                     installmentData.setInstallmentNumber(i + 1);
-                    installmentData.setInstallmentDueDate(debtRegisterDto.getInstallments().getFirst().getInstallmentDueDate().plusMonths(i));
+                    installmentData.setInstallmentDueDate(debtDate.plusMonths(i + 1));
                     installmentData.setDebtId(debtId);
                     installmentRepository.save(installmentData);
 

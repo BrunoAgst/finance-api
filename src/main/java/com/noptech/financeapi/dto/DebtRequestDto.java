@@ -27,10 +27,10 @@ public class DebtRequestDto {
         return !fixed || !category.name().equals("INSTALLMENT_CREDIT");
     }
 
-    @AssertTrue(message = "Invalid installment fields")
+    @AssertTrue(message = "Installment number must be at least 1 for installment credit")
     private boolean isValidInstallmentFields() {
         if (category.name().equals("INSTALLMENT_CREDIT")) {
-            return installmentNumber > 0;
+            return installmentNumber != null && installmentNumber >= 1;
         }
         return true;
     }

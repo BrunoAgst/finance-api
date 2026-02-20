@@ -39,7 +39,40 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
 
     @Query(value = """
         SELECT 
-            d.id as debt_id,
+            d.id as id,
+            d.name as debt_name,
+            d.amount as debtAmount,
+            d.category,
+            d.user_id,
+            d.date as debtDate,
+            d.fixed,
+            NULL as installment_id,
+            CASE 
+                WHEN d.category = 6 THEN ROUND(d.amount / COUNT(i.id), 2)
+                ELSE NULL 
+            END as installment_amount,
+            CASE 
+                WHEN d.category = 6 THEN COUNT(i.id)
+                ELSE NULL 
+            END as installment_number,
+            NULL as installment_due_date
+        FROM 
+            debts d
+        LEFT JOIN 
+            installments i ON d.id = i.debt_id
+        WHERE 
+            d.date >= CURRENT_DATE - INTERVAL '30 days'
+            AND d.user_id = :userId
+        GROUP BY 
+            d.id, d.name, d.amount, d.category, d.user_id, d.date, d.fixed
+        ORDER BY 
+            d.date DESC
+    """, nativeQuery = true)
+    List<DebtsAndInstallments> findDebtsByUserIdLast30Days(@Param("userId") Long userId);
+
+    @Query(value = """
+        SELECT 
+            d.id as id,
             d.name as debt_name,
             d.amount as debtAmount,
             d.category,
@@ -54,14 +87,22 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
             debts d
         LEFT JOIN 
             installments i ON d.id = i.debt_id 
-            AND DATE_TRUNC('month', i.installment_due_date) = DATE_TRUNC('month', CURRENT_DATE)
+            AND EXTRACT(YEAR FROM i.installment_due_date) = :year
+            AND EXTRACT(MONTH FROM i.installment_due_date) = :month
         WHERE 
-            d.date >= CURRENT_DATE - INTERVAL '30 days'
-            AND d.user_id = :userId
+            d.user_id = :userId
+            AND (
+                (d.category != 6 AND EXTRACT(YEAR FROM d.date) = :year AND EXTRACT(MONTH FROM d.date) = :month)
+                OR (d.category = 6 AND i.id IS NOT NULL)
+            )
         ORDER BY 
             d.date DESC, 
             d.id, 
             i.installment_number
     """, nativeQuery = true)
-    List<DebtsAndInstallments> findDebtsByUserIdLast30Days(@Param("userId") Long userId);
+    List<DebtsAndInstallments> findDebtsByUserIdAndMonth(
+            @Param("userId") Long userId,
+            @Param("year") Integer year,
+            @Param("month") Integer month
+    );
 }

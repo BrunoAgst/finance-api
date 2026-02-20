@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
@@ -48,7 +49,7 @@ public class DebtController {
                 IntStream.range(1, debtUpdateRequest.getInstallmentNumber() + 1)
                         .mapToObj(i -> DebtUpdateDto.Installment.builder()
                                 .installmentNumber(i)
-                                .installmentDueDate(debtUpdateRequest.getDate().plusMonths(i + 1))
+                                .installmentDueDate(debtUpdateRequest.getDate().plusMonths(i))
                                 .installmentAmount(
                                         debtUpdateRequest.getAmount().divide(
                                                 BigDecimal.valueOf(debtUpdateRequest.getInstallmentNumber()),
@@ -119,13 +120,49 @@ public class DebtController {
 
         var userId = user.getId();
 
-        log.info("[DebtController] - Fetching all debts for userId: {}", userId);
+        log.info("[DebtController] - Fetching debts (last 30 days) for userId: {}", userId);
 
         var data = debtService.getAllDebtsForUser(userId.toString());
 
         return ResponseEntity
                 .status(200)
                 .body(data.stream().map(item -> AllDebtsResponseDto.builder()
+                                .id(item.getId())
+                                .name(item.getName())
+                                .amount(item.getAmount())
+                                .category(item.getCategory())
+                                .date(item.getDate())
+                                .fixed(item.getFixed())
+                                .installmentAmount(item.getInstallmentAmount())
+                                .installmentDueDate(item.getInstallmentDueDate())
+                                .installmentNumber(item.getInstallmentNumber())
+                                .build()
+                ).toList());
+    }
+
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @GetMapping(value = "/debts/month/{month}", produces = "application/json")
+    public ResponseEntity<List<AllDebtsResponseDto>> getDebtsByMonth(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Integer month) {
+
+        var keycloakId = jwt.getClaim("sub");
+
+        var user = userRepository.findByKeycloakId(UUID.fromString(keycloakId.toString()))
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + jwt.getClaim("email")));
+
+        var userId = user.getId();
+
+        var currentYear = LocalDate.now().getYear();
+
+        log.info("[DebtController] - Fetching debts for userId: {} for month: {}/{}", userId, month, currentYear);
+
+        var data = debtService.getDebtsByMonth(userId.toString(), currentYear, month);
+
+        return ResponseEntity
+                .status(200)
+                .body(data.stream().map(item -> AllDebtsResponseDto.builder()
+                                .id(item.getId())
                                 .name(item.getName())
                                 .amount(item.getAmount())
                                 .category(item.getCategory())
