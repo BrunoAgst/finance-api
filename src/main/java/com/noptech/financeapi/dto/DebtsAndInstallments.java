@@ -10,6 +10,7 @@ public interface DebtsAndInstallments {
     Integer getCategory();
     Long getUserId();
     LocalDate getDebtDate();
+    LocalDate getDueDate();
     Boolean getFixed();
     Long getInstallmentId();
     BigDecimal getInstallmentAmount();

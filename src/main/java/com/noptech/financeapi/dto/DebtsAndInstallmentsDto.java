@@ -15,6 +15,7 @@ public class DebtsAndInstallmentsDto {
     private BigDecimal amount;
     private Category category;
     private LocalDate date;
+    private LocalDate dueDate;
     private Boolean fixed;
     private BigDecimal installmentAmount;
     private Integer installmentNumber;

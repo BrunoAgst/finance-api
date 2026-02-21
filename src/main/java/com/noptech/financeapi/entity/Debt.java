@@ -26,5 +26,8 @@ public class Debt {
 
     private LocalDateTime date;
 
+    @Column(name = "due_date")
+    private LocalDateTime dueDate;
+
     private Boolean fixed;
 }

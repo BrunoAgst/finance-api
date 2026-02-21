@@ -42,6 +42,11 @@ public class DebtServiceImpl implements DebtService {
             data.setCategory(debtRegisterDto.getCategory().getCategoryNumber());
             data.setUserId(debtRegisterDto.getUserId());
             data.setDate(debtRegisterDto.getDate());
+
+            if (debtRegisterDto.getCategory().name().equals("CREDIT")) {
+                data.setDueDate(debtRegisterDto.getDate().plusMonths(1));
+            }
+
             data.setFixed(debtRegisterDto.getFixed());
 
             debtRepository.save(data);
@@ -120,6 +125,7 @@ public class DebtServiceImpl implements DebtService {
                             .amount(item.getDebtAmount())
                             .category(Category.fromCode(item.getCategory()))
                             .date(item.getDebtDate())
+                            .dueDate(item.getDueDate())
                             .fixed(item.getFixed())
                             .installmentAmount(item.getInstallmentAmount())
                             .installmentNumber(item.getInstallmentNumber())
@@ -147,6 +153,7 @@ public class DebtServiceImpl implements DebtService {
                             .amount(item.getDebtAmount())
                             .category(Category.fromCode(item.getCategory()))
                             .date(item.getDebtDate())
+                            .dueDate(item.getDueDate())
                             .fixed(item.getFixed())
                             .installmentAmount(item.getInstallmentAmount())
                             .installmentNumber(item.getInstallmentNumber())

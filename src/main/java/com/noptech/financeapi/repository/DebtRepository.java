@@ -45,6 +45,7 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
             d.category,
             d.user_id,
             d.date as debtDate,
+            d.due_date as dueDate,
             d.fixed,
             NULL as installment_id,
             CASE 
@@ -64,7 +65,7 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
             d.date >= CURRENT_DATE - INTERVAL '30 days'
             AND d.user_id = :userId
         GROUP BY 
-            d.id, d.name, d.amount, d.category, d.user_id, d.date, d.fixed
+            d.id, d.name, d.amount, d.category, d.user_id, d.date, d.due_date, d.fixed
         ORDER BY 
             d.date DESC
     """, nativeQuery = true)
@@ -78,6 +79,7 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
             d.category,
             d.user_id,
             d.date as debtDate,
+            d.due_date as dueDate,
             d.fixed,
             i.id as installment_id,
             i.installment_amount,
@@ -92,7 +94,8 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
         WHERE 
             d.user_id = :userId
             AND (
-                (d.category != 6 AND EXTRACT(YEAR FROM d.date) = :year AND EXTRACT(MONTH FROM d.date) = :month)
+                (d.category = 1 AND EXTRACT(YEAR FROM d.due_date) = :year AND EXTRACT(MONTH FROM d.due_date) = :month)
+                OR (d.category != 1 AND d.category != 6 AND EXTRACT(YEAR FROM d.date) = :year AND EXTRACT(MONTH FROM d.date) = :month)
                 OR (d.category = 6 AND i.id IS NOT NULL)
             )
         ORDER BY 
