@@ -144,7 +144,15 @@ public class DebtController {
     @GetMapping(value = "/debts/month/{month}", produces = "application/json")
     public ResponseEntity<List<AllDebtsResponseDto>> getDebtsByMonth(
             @AuthenticationPrincipal Jwt jwt,
-            @PathVariable Integer month) {
+            @PathVariable Integer month,
+            @RequestParam(name = "year", required = false) Integer year) {
+
+        if (month < 1 || month > 12) {
+            throw new IllegalArgumentException("Month must be between 1 and 12");
+        }
+        if (year != null && (year < 1 || year > 9999)) {
+            throw new IllegalArgumentException("Year must be between 1 and 9999");
+        }
 
         var keycloakId = jwt.getClaim("sub");
 
@@ -153,11 +161,11 @@ public class DebtController {
 
         var userId = user.getId();
 
-        var currentYear = LocalDate.now().getYear();
+        var selectedYear = year == null ? LocalDate.now().getYear() : year;
 
-        log.info("[DebtController] - Fetching debts for userId: {} for month: {}/{}", userId, month, currentYear);
+        log.info("[DebtController] - Fetching debts for userId: {} for month: {}/{}", userId, month, selectedYear);
 
-        var data = debtService.getDebtsByMonth(userId.toString(), currentYear, month);
+        var data = debtService.getDebtsByMonth(userId.toString(), selectedYear, month);
 
         return ResponseEntity
                 .status(200)
